@@ -84,6 +84,41 @@
 				return false;
 			}
 		}
+		
+		public function update_user_info($data){
+			$this->db->trans_start();
+			$this->db->set('birth_date', "'".date('Y-m-d', strtotime(str_replace('/', '-', $data['birthday'])))."'", FALSE);
+			$this->db->set('gender', $data['gender'], FALSE);
+			$this->db->set('hobby', "'".$data['hobby']."'", FALSE);
+			$this->db->where('user_id', $data['user_id']);
+			$this->db->update('profile');
+			$this->db->trans_complete();
+			return $this->db->trans_status();
+		}
+		
+		public function update_user_email($data){
+			$condition1 = array('user_id' => $data['user_id'], 'username' => $data['old_email']);
+			$condition2 = array('user_id' => $data['user_id'], 'email' => $data['old_email']);
+			
+			$this->db->trans_start();
+			$this->db->set('username', "'".$data['new_email']."'", FALSE);
+			$this->db->where($condition1);
+			$this->db->update('user');
+			$this->db->set('email', "'".$data['new_email']."'", FALSE);
+			$this->db->where($condition2);
+			$this->db->update('profile');
+			$this->db->trans_complete();
+			return $this->db->trans_status();
+		}
+		
+		public function update_user_password($data){
+			$this->db->trans_start();
+			$this->db->set('password', "'".md5($data['new_password'])."'", FALSE);
+			$this->db->where('user_id', $data['user_id']);
+			$this->db->update('user');
+			$this->db->trans_complete();
+			return $this->db->trans_status();
+		}
 
 	}
 

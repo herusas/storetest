@@ -10,17 +10,121 @@
 			$this->load->model('store_db'); //load database			
 		}
 		
+		public function change_email(){			
+			$data = $this->session->userdata('logged_in');
+			if($data['username'] == ''){		
+				return $this->logged_out();
+			} else {
+				if($this->input->post('uid') != ''){
+					$data_update = array(
+						'user_id' => $this->input->post('uid'),
+						'old_email' => $this->input->post('old_email'),
+						'new_email' => $this->input->post('new_email')
+					);
+					$data['password'] = $this->input->post('password');
+					//die(print_r($data_update));
+					$passcheck = $this->store_db->login($data);
+					if($passcheck == TRUE){
+						$updated = $this->store_db->update_user_email($data_update);
+					} else {
+						$passcheck = false;
+						$updated = false;
+					}
+				}
+				else $updated = false;
+				$result = $this->store_db->read_user_info($data);
+				
+				$result = (array)$result[0];
+				if($result != false){
+					$this->form_validation->set_rules('old_email', 'Email Lama', 'trim|required|xss_clean');
+					$this->form_validation->set_rules('new_email', 'Email Baru', 'trim|required|xss_clean');
+					
+					$data = array(
+						'user_id' => $result['user_id'],
+						'old_email' => $result['username']
+					);
+					$data['message_display'] = ($updated) ? 'Anda berhasil mengubah email' : '';
+					$data['message_error'] = (isset($passcheck) && !$passcheck) ? 'Kata Sandi tidak benar' : '';
+					
+					$this->load->view('templates/header');
+					$this->load->view('people/change_email', $data);
+					$this->load->view('templates/footer');
+				} 		
+				else redirect('people/logged_out', 'refresh');
+			}
+		}
+		
+		public function change_password(){			
+			$data = $this->session->userdata('logged_in');
+			if($data['username'] == ''){		
+				return $this->logged_out();
+			} else {
+				if($this->input->post('uid') != ''){
+					$data_update = array(
+						'user_id' => $this->input->post('uid'),
+						'old_password' => $this->input->post('old_password'),
+						'new_password' => $this->input->post('new_password')
+					);
+					$data['password'] = $this->input->post('old_password');
+					//die(print_r($data_update));
+					$passcheck = $this->store_db->login($data);
+					if($passcheck == TRUE){
+						$updated = $this->store_db->update_user_password($data_update);
+					} else {
+						$passcheck = false;
+						$updated = false;
+					}
+				}
+				else $updated = false;
+				$result = $this->store_db->read_user_info($data);
+				
+				$result = (array)$result[0];
+				if($result != false){
+					$this->form_validation->set_rules('old_email', 'Email Lama', 'trim|required|xss_clean');
+					$this->form_validation->set_rules('new_email', 'Email Baru', 'trim|required|xss_clean');
+					
+					$data = array(
+						'user_id' => $result['user_id']
+					);
+					$data['message_display'] = ($updated) ? 'Anda berhasil mengubah password' : '';
+					$data['message_error'] = (isset($passcheck) && !$passcheck) ? 'Kata Sandi tidak benar' : '';
+					
+					$this->load->view('templates/header');
+					$this->load->view('people/change_password', $data);
+					$this->load->view('templates/footer');
+				} 		
+				else redirect('people/logged_out', 'refresh');
+			}
+		}
+		
 		public function edit(){			
 			$data = $this->session->userdata('logged_in');
 			if($data['username'] == ''){		
 				return $this->logged_out();
 			} else {
+				if($this->input->post('uid') != ''){
+					$data_update = array(
+						'user_id' => $this->input->post('uid'),
+						'birthday' => $this->input->post('birthday'),
+						'gender' => $this->input->post('gender'),
+						'hobby' => $this->input->post('hobby')
+					);
+					$data['password'] = $this->input->post('password');
+					//die(print_r($data_update));
+					$passcheck = $this->store_db->login($data);
+					if($passcheck == TRUE){
+						$updated = $this->store_db->update_user_info($data_update);
+					} else {
+						$passcheck = false;
+						$updated = false;
+					}
+				}
+				else $updated = false;
 				$result = $this->store_db->read_user_info($data);
 				//die(print_r((array)$result[0]));
 				$result = (array)$result[0];
 				if($result != false){
-					$this->form_validation->set_rules('mobile_phone', 'Nomor HP', 'trim|required|xss_clean');
-					$this->form_validation->set_rules('birthday', 'Tanggal Lahir', 'callback_checkDateFormat');
+					$this->form_validation->set_rules('birthday', 'Tanggal Lahir', 'trim|required|xss_clean');
 					$this->form_validation->set_rules('hobby', 'Hobi', 'trim|required|xss_clean');
 					
 					$data = array(
@@ -32,11 +136,15 @@
 						'gender' => $result['gender'],
 						'hobby' => $result['hobby'],
 					);
+					$data['message_display'] = ($updated) ? 'Anda berhasil mengubah profil' : '';
+					$data['message_error'] = (isset($passcheck) && !$passcheck) ? 'Kata Sandi tidak benar' : '';
 					
 					$this->load->view('templates/header');
+					$this->load->view('people/people_header');
+					$this->load->view('people/sidebar');
 					$this->load->view('people/edit', $data);
+					$this->load->view('people/people_footer');
 					$this->load->view('templates/footer');
-					
 				} 		
 				else redirect('people/logged_out', 'refresh');
 			}
@@ -121,7 +229,7 @@
 			
 			if ($this->form_validation->run() == FALSE) {
 				$this->load->view('templates/header');
-				$this->load->view('login_form');
+				$this->load->view('people/login');
 				$this->load->view('templates/footer');
 			} else {
 				$data = array(
@@ -167,7 +275,9 @@
 				$result = $this->store_db->read_user_info($data);
 				if($result != false){
 					$this->load->view('templates/header');
+					$this->load->view('people/people_header');
 					$this->load->view('people/home', $result[0]);
+					$this->load->view('people/people_footer');
 					$this->load->view('templates/footer');
 				} 		
 			}

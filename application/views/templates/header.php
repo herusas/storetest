@@ -12,9 +12,12 @@
 		<!--[if lt IE 9]>
 		<script src="<?php echo base_url('assets/js/html5shiv.min.js'); ?>"></script>
 		<![endif]-->
+		<link rel="stylesheet" href="http://code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
+		<script src="http://code.jquery.com/jquery-1.10.2.js"></script>
+		<script src="http://code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
 	</head>
 <body>
-	<header class="navbar navbar-fixed-top" style="position: absolute; width: 962px;">
+	<header class="navbar navbar-fixed-top" style="position: absolute; ">
 		<div class="navbar-inner">
 			<div class="container clearfix">
 				<div class="topbar-logo-wrapper">
@@ -25,3 +28,4 @@
 				</div>
 		</div>
 	</header>
+	<div id="content-container">
