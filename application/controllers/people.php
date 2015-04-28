@@ -10,6 +10,204 @@
 			$this->load->model('store_db'); //load database			
 		}
 		
+		public function address(){
+			$data = $this->session->userdata('logged_in');
+			$list = false;
+			if($data['username'] == ''){		
+				return $this->logged_out();
+			} else {
+				$result = $this->store_db->get_user_id($data);
+				$result = (array)$result[0];
+				if($result != false){
+					$data = $this->store_db->get_user_address($result);
+					if($data != false){
+						$data['result'] = $data;
+						$list = true;
+					}
+				}
+			}
+			if($list == false){
+				$data['result'] = '';
+			}
+			$this->load->view('templates/header');
+			$this->load->view('people/people_header');
+			$this->load->view('people/sidebar');
+			$this->load->view('people/address', $data);
+			$this->load->view('people/people_footer');
+			$this->load->view('templates/footer');
+		}
+		
+		public function address_new(){			
+			$data = $this->session->userdata('logged_in');
+			if($data['username'] == ''){		
+				return $this->logged_out();
+			} else {
+				$uid = $this->store_db->get_user_id($data);
+				if($this->input->post('uid') != ''){
+					$this->form_validation->set_rules('alias', 'Simpan sebagai', 'trim|required|xss_clean');
+					$this->form_validation->set_rules('receiver_name', 'Nama Penerima', 'trim|required|xss_clean');
+					$this->form_validation->set_rules('address', 'Alamat', 'trim|required|xss_clean');
+					$this->form_validation->set_rules('post_code', 'Kode Pos', 'trim|required|xss_clean');
+					//$this->form_validation->set_rules('country_code', 'Negara', 'trim|required|xss_clean');
+					$this->form_validation->set_rules('province_code', 'Provinsi', 'trim|required|xss_clean');
+					$this->form_validation->set_rules('city_code', 'Kota/Kabupaten', 'trim|required|xss_clean');
+					$this->form_validation->set_rules('district_code', 'Kecamatan', 'trim|required|xss_clean');
+					$this->form_validation->set_rules('phone_number', 'Nomor Telepon', 'trim|required|xss_clean');
+					
+					$data = array(
+						'user_id' => $this->input->post('uid'),
+						'alias' => $this->input->post('alias'),
+						'receiver_name' => $this->input->post('receiver_name'),
+						'address' => $this->input->post('address'),
+						'post_code' => $this->input->post('post_code'),
+						'country_code' => $this->input->post('country_code'),
+						'province_code' => $this->input->post('province_code'),
+						'city_code' => $this->input->post('city_code'),
+						'district_code' => $this->input->post('district_code'),
+						'phone_number' => $this->input->post('phone_number')
+					);
+					if($this->form_validation->run() == FALSE){
+						$updated = false;
+					}
+					else {
+						$updated = $this->store_db->new_user_address($data);
+					}
+					
+				}
+				else {
+					$data = array(
+						'user_id' => $uid[0]['user_id'],
+						'alias' => '',
+						'receiver_name' => '',
+						'address' => '',
+						'post_code' => '',
+						'country_code' => '107',
+						'province_code' => '',
+						'city_code' => '',
+						'district_code' => '',
+						'phone_number' => ''
+					);
+					$updated = false;
+				}
+				
+				
+				if($updated == false){
+				
+					$data['province_list'] = $this->store_db->get_address_list('107', 1);
+					$data['city_list'] = $this->store_db->get_address_list($data['province_code'], 2);
+					$data['district_list'] = $this->store_db->get_address_list($data['city_code'], 3) ;
+					
+					$data['message_display'] = ($updated) ? 'Anda berhasil mengubah password' : '';
+					$data['message_error'] = (isset($passcheck) && !$passcheck) ? 'Kata Sandi tidak benar' : '';
+					
+					$this->load->view('templates/header');
+					$this->load->view('people/address_new', $data);
+					$this->load->view('templates/footer');
+				} 		
+				else redirect('people/address', 'refresh');
+			}
+		}
+		
+		public function get_address(){
+			$data = array();
+			if($this->input->get('province_code') != '')
+				$data['options'] = $this->store_db->get_address_list($this->input->get('province_code'), 2);	//die(print_r($data['options']));		
+			if($this->input->get('city_code') != '')
+				$data['options'] = $this->store_db->get_address_list($this->input->get('city_code'), 3);
+			$this->load->view('people/get_address', $data);
+		}
+		
+		public function bank(){
+			$data = $this->session->userdata('logged_in');
+			$list = false;
+			if($data['username'] == ''){		
+				return $this->logged_out();
+			} else {
+				$result = $this->store_db->get_user_id($data);
+				$result = (array)$result[0];
+				if($result != false){
+					$data['result'] = $this->store_db->get_user_bank_account($result);
+					if($data != false){
+						$list = true;
+					}
+				}
+			}
+			if($list == false){
+				$data['result'] = '';
+			}//die(print_r($data));
+			$this->load->view('templates/header');
+			$this->load->view('people/people_header');
+			$this->load->view('people/sidebar');
+			$this->load->view('people/bank', $data);
+			$this->load->view('people/people_footer');
+			$this->load->view('templates/footer');
+			
+		}
+		
+		public function bank_new(){			
+			$data = $this->session->userdata('logged_in');
+			if($data['username'] == ''){		
+				return $this->logged_out();
+			} else {
+				$uid = $this->store_db->get_user_id($data);
+				if($this->input->post('uid') != ''){
+					$this->form_validation->set_rules('account_name', 'Nama Akun', 'trim|required|xss_clean');
+					$this->form_validation->set_rules('account_number', 'Nomor Rekening', 'trim|required|xss_clean');
+					$this->form_validation->set_rules('bank_id', 'Nama Bank', 'trim|required|xss_clean');
+					$this->form_validation->set_rules('account_branch', 'Cabang', 'trim|required|xss_clean');
+					$this->form_validation->set_rules('password', 'Kata Sandi', 'trim|required|xss_clean');
+					
+					$data_update = array(
+						'user_id' => $this->input->post('uid'),
+						'account_name' => $this->input->post('account_name'),
+						'account_number' => $this->input->post('account_number'),
+						'bank_id' => $this->input->post('bank_id'),
+						'account_branch' => $this->input->post('account_branch')
+					);
+					
+					if($this->form_validation->run() == FALSE){
+						$updated = false;					
+					}
+					else {
+						$data['password'] = $this->input->post('password');
+						//die(print_r($data_update));
+						$passcheck = $this->store_db->login($data);
+						if($passcheck == TRUE){
+							$updated = $this->store_db->new_user_bank_account($data_update);
+						} else {
+							$passcheck = false;
+							$updated = false;
+						}
+					}
+					$data = $data_update;
+				}
+				else {
+					$data = array(
+						'user_id' => $uid[0]['user_id'],
+						'account_name' => '',
+						'account_number' => '',
+						'bank_id' => '',
+						'account_branch' => ''
+					);
+					$updated = false;
+				}
+				
+				
+				if($updated == false){
+				
+					$data['bank_list'] = $this->store_db->get_bank_account_list();
+					
+					$data['message_display'] = ($updated) ? 'Anda berhasil mengubah password' : '';
+					$data['message_error'] = (isset($passcheck) && !$passcheck) ? 'Kata Sandi tidak benar' : '';
+					
+					$this->load->view('templates/header');
+					$this->load->view('people/bank_new', $data);
+					$this->load->view('templates/footer');
+				} 		
+				else redirect('people/bank', 'refresh');
+			}
+		}
+		
 		public function change_email(){			
 			$data = $this->session->userdata('logged_in');
 			if($data['username'] == ''){		

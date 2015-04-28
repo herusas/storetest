@@ -21,7 +21,7 @@
 			$data_profile = array(
 			'name' => $data['name'],
 			'email' => $data['email_value'],
-			'birth_date' => date('Y-m-d', strtotime($data['birthday'])),
+			'birth_date' => date('Y-m-d', strtotime(str_replace('/', '-', $data['birthday']))),
 			'birth_place' => '',
 			'photo_user' => '',
 			'photo_thumb' => '',
@@ -62,6 +62,20 @@
 
 			if ($query->num_rows() == 1) {
 				return true;
+			} else {
+				return false;
+			}
+		}
+		
+		public function get_user_id($data){
+			$this->db->select('user_id');
+			$this->db->from('user');
+			$this->db->where('username', $data['username']);
+			$this->db->limit(1);
+			$query = $this->db->get();
+
+			if ($query->num_rows() == 1) {
+				return $query->result(0);
 			} else {
 				return false;
 			}
@@ -118,6 +132,82 @@
 			$this->db->update('user');
 			$this->db->trans_complete();
 			return $this->db->trans_status();
+		}
+		
+		public function get_user_address($data){
+			$this->db->select('a.user_address_id, a.user_id, a.alias, a.receiver_name, a.phone_number, a.address, a.post_code, (select b.name from address_list b where b.address_list_id = a.district_code) as district, (select b.name from address_list b where b.address_list_id = a.city_code) as city, (select b.name from address_list b where b.address_list_id = a.province_code) as province, (select b.name from address_list b where b.address_list_id = a.country_code) as country');
+			$this->db->from('user_address a');
+			$this->db->where('a.user_id', $data['user_id']);
+			$this->db->limit(5);
+			$query = $this->db->get();
+
+			if ($query->num_rows() >= 1) {
+				return $query->result(0);
+			} else {
+				return false;
+			}
+		}
+		
+		public function new_user_address($data){
+			$data['user_address_id'] = '';
+			$data['status'] = '1';		
+			
+			return $this->db->insert('user_address', $data);
+		}
+		
+		public function get_address_list($parent_id, $level){
+			$result = array('' => 'Pilih '.($level == 1 ? 'Provinsi' : ($level == 2 ? 'Kota / Kabupaten' : ($level == 3 ? 'Kecamatan' : 'Negara'))));
+			if($parent_id != ''){
+				$cond = array('parent_id' => $parent_id, 'status' => '1');
+				$this->db->select('address_list_id, name');
+				$this->db->from('address_list');
+				$this->db->where($cond);
+				$query = $this->db->get();
+				if ($query->num_rows() >= 1) {
+					foreach($query->result() as $data)
+						$result[$data->address_list_id] = $data->name;
+				}
+			}
+
+			return $result;
+			
+		}
+		
+		public function get_user_bank_account($data){
+			$this->db->select('a.bank_account_id, a.user_id, a.account_name, a.account_number, a.account_branch, a.status, (select b.bank_name from bank_account b where b.bank_id = a.bank_id) as bank_name');
+			$this->db->from('user_bank_account a');
+			$this->db->where('a.user_id', $data['user_id']);
+			$this->db->limit(5);
+			$query = $this->db->get();
+
+			if ($query->num_rows() >= 1) {
+				return $query->result(0);
+			} else {
+				return false;
+			}
+		}
+		
+		public function new_user_bank_account($data){
+			$data['bank_account_id'] = '';
+			$data['status'] = '1';		
+			
+			return $this->db->insert('user_bank_account', $data);
+		}
+		
+		public function get_bank_account_list(){
+			$result = array('' => 'Pilih Bank Anda');
+			$cond = array('status' => '1');
+			$this->db->select('bank_id, bank_name');
+			$this->db->from('bank_account');
+			$this->db->where($cond);
+			$query = $this->db->get();
+			if ($query->num_rows() >= 1) {
+				foreach($query->result() as $data)
+					$result[$data->bank_id] = $data->bank_name;
+			}
+
+			return $result;
+			
 		}
 
 	}

@@ -1,9 +1,9 @@
 <html>
 	<head>
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-		<title>Masuk J-Store Online</title>
+		<title>J-Store Online</title>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
-		<meta name="title" content="Masuk | J-Store Online" />
+		<meta name="title" content="J-Store Online" />
 		<meta name="description" content="Silakan login / masuk ke J-Store Online. Nikmati pengalaman belanja paling menyenangkan dan aman karena J-Store Online dilengkapi rekening bersama gratis!" />
 		
 		<link rel="stylesheet" href="<?php echo base_url('assets/css/bootstrap.css'); ?>" type="text/css"/>
