@@ -9,19 +9,23 @@
 			$this->load->library('session'); //load session library
 			$this->load->model('store_db'); //load database			
 		}
-		
+//Address
 		public function address(){
 			$data = $this->session->userdata('logged_in');
 			$list = false;
-			if($data['username'] == ''){		
+			$data['name'] = '';
+			if($data['username'] == ''){	
+				$data_header['logged_in'] = false;	
 				return $this->logged_out();
 			} else {
+				$data_header['logged_in'] = true;
 				$result = $this->store_db->get_user_id($data);
 				$result = (array)$result[0];
 				if($result != false){
-					$data = $this->store_db->get_user_address($result);
-					if($data != false){
-						$data['result'] = $data;
+					$data['name'] = $this->store_db->get_user_fullname($result)[0]['name'];
+					$result = $this->store_db->get_user_address($result);
+					if($result != false){
+						$data['result'] = $result;
 						$list = true;
 					}
 				}
@@ -29,8 +33,9 @@
 			if($list == false){
 				$data['result'] = '';
 			}
+			
 			$this->load->view('templates/header');
-			$this->load->view('people/people_header');
+			$this->load->view('people/people_header', $data_header);
 			$this->load->view('people/sidebar');
 			$this->load->view('people/address', $data);
 			$this->load->view('people/people_footer');
@@ -116,17 +121,21 @@
 				$data['options'] = $this->store_db->get_address_list($this->input->get('city_code'), 3);
 			$this->load->view('people/get_address', $data);
 		}
-		
+//Bank	
 		public function bank(){
 			$data = $this->session->userdata('logged_in');
 			$list = false;
+			$data['name'] = '';
 			if($data['username'] == ''){		
+				$data_header['logged_in'] = false;
 				return $this->logged_out();
 			} else {
+				$data_header['logged_in'] = true;
 				$result = $this->store_db->get_user_id($data);
 				$result = (array)$result[0];
 				if($result != false){
 					$data['result'] = $this->store_db->get_user_bank_account($result);
+					$data['name'] = $this->store_db->get_user_fullname($result)[0]['name'];
 					if($data != false){
 						$list = true;
 					}
@@ -136,7 +145,7 @@
 				$data['result'] = '';
 			}//die(print_r($data));
 			$this->load->view('templates/header');
-			$this->load->view('people/people_header');
+			$this->load->view('people/people_header', $data_header);
 			$this->load->view('people/sidebar');
 			$this->load->view('people/bank', $data);
 			$this->load->view('people/people_footer');
@@ -207,7 +216,7 @@
 				else redirect('people/bank', 'refresh');
 			}
 		}
-		
+//Biodata		
 		public function change_email(){			
 			$data = $this->session->userdata('logged_in');
 			if($data['username'] == ''){		
@@ -300,6 +309,7 @@
 			if($data['username'] == ''){		
 				return $this->logged_out();
 			} else {
+				$data_header['logged_in'] = true;
 				if($this->input->post('uid') != ''){
 					$data_update = array(
 						'user_id' => $this->input->post('uid'),
@@ -338,7 +348,7 @@
 					$data['message_error'] = (isset($passcheck) && !$passcheck) ? 'Kata Sandi tidak benar' : '';
 					
 					$this->load->view('templates/header');
-					$this->load->view('people/people_header');
+					$this->load->view('people/people_header', $data_header);
 					$this->load->view('people/sidebar');
 					$this->load->view('people/edit', $data);
 					$this->load->view('people/people_footer');
@@ -347,78 +357,31 @@
 				else redirect('people/logged_out', 'refresh');
 			}
 		}
-		
+//Home		
+		public function home(){
+			$data = $this->session->userdata('logged_in');
+			if($data['username'] == ''){		
+				return $this->logged_out();
+			} else {
+				$data_header['logged_in'] = true;
+				$result = $this->store_db->read_user_info($data);
+				if($result != false){
+					$this->load->view('templates/header');
+					$this->load->view('people/people_header', $data_header);
+					$this->load->view('people/home', $result[0]);
+					$this->load->view('people/people_footer');
+					$this->load->view('templates/footer');
+				} 		
+			}
+		}
+//Login		
 		public function login(){ //show login page
+			$data_header['logged_in'] = false;
 			$this->load->view('templates/header');
+			$this->load->view('people/people_header', $data_header);
 			$this->load->view('people/login');
+			$this->load->view('people/people_footer');
 			$this->load->view('templates/footer');
-		}
-		
-		public function register(){ //show registration page
-			$data = array(
-			'name' => '',
-			'mobile_phone' => '',
-			'birthday' => '',
-			'email_value' => '',
-			'password' => '',
-			'repassword' => ''
-			);
-			$this->load->view('templates/header');
-			$this->load->view('people/register', $data);			
-			$this->load->view('templates/footer');
-		}
-		
-		public function new_user_reg(){ //validate registration data
-			$this->form_validation->set_rules('name', 'Nama Lengkap', 'trim|required|css_clean');
-			$this->form_validation->set_rules('mobile_phone', 'Nomor HP', 'trim|required|xss_clean');
-			$this->form_validation->set_rules('birthday', 'Tanggal Lahir', 'callback_checkDateFormat');
-			$this->form_validation->set_rules('email_value', 'Email', 'trim|required|xss_clean');
-			$this->form_validation->set_rules('password', 'Kata sandi', 'trim|required|xss_clean');
-			// Check date format, if input date is valid return TRUE else returned FALSE.
-			function checkDateFormat($date) {
-			if (preg_match("/[0-31]{2}\/[0-12]{2}\/[0-9]{4}/", $date)) {
-			if(checkdate(substr($date, 3, 2), substr($date, 0, 2), substr($date, 6, 4)))
-			return true;
-			else
-			return false;
-			} else {
-			return false;
-			}
-			}
-			$data = array(
-			'name' => $this->input->post('name'),
-			'mobile_phone' => $this->input->post('mobile_phone'),
-			'birthday' => $this->input->post('birthday'),
-			'email_value' => $this->input->post('email_value'),
-			'password' => $this->input->post('password'),
-			'repassword' => $this->input->post('repassword'),
-			'privilege' => '1',
-			'status' => '1'
-			);
-			if($this->form_validation->run() == FALSE){
-				$this->load->view('templates/header');
-				$this->load->view('people/register', $data);
-				$this->load->view('templates/footer');
-			} else {
-			if($this->input->post('password') !== $this->input->post('repassword')){
-				$data['pword_error'] = 'Kata sandi tidak sama';
-				$this->load->view('templates/header');
-				$this->load->view('people/register', $data);
-				$this->load->view('templates/footer');				
-			} else
-				$result = $this->store_db->reg_insert_user($data);
-				if($result == TRUE){
-					$data['message_display'] = 'Registration Successfully!';
-					$this->load->view('templates/header');
-					$this->load->view('people/login', $data);
-					$this->load->view('templates/footer');
-				} else {
-					$data['message_display'] = 'Email sudah digunakan!';
-					$this->load->view('templates/header');
-					$this->load->view('people/register', $data);
-					$this->load->view('templates/footer');
-				}
-			}
 		}
 		
 		public function user_login_process(){ //check user login
@@ -426,8 +389,11 @@
 			$this->form_validation->set_rules('password', 'Password', 'trim|required|xss_clean');
 			
 			if ($this->form_validation->run() == FALSE) {
+				$data_header['logged_in'] = false;
 				$this->load->view('templates/header');
+				$this->load->view('people/people_header', $data_header);
 				$this->load->view('people/login');
+				$this->load->view('people/people_footer');
 				$this->load->view('templates/footer');
 			} else {
 				$data = array(
@@ -458,34 +424,24 @@
 					}*/
 				} else {
 					$data = array('error_message' => 'Invalid Username or Password');
+					$data_header['logged_in'] = false;
 					$this->load->view('templates/header');
+					$this->load->view('people/people_header', $data_header);
 					$this->load->view('people/login', $data);
-					$this->load->view('templates/footer');
-				}
-			}
-		}
-		
-		public function home(){
-			$data = $this->session->userdata('logged_in');
-			if($data['username'] == ''){		
-				return $this->logged_out();
-			} else {
-				$result = $this->store_db->read_user_info($data);
-				if($result != false){
-					$this->load->view('templates/header');
-					$this->load->view('people/people_header');
-					$this->load->view('people/home', $result[0]);
 					$this->load->view('people/people_footer');
 					$this->load->view('templates/footer');
-				} 		
+				}
 			}
 		}
 		
 		public function logged_out(){ //logout
 			$sess_array = array('username' => ''); //remove session data
 			$this->session->unset_userdata('logged_in', $sess_array);
+			$data_header['logged_in'] = false;
 			$this->load->view('templates/header');
+			$this->load->view('people/people_header', $data_header);
 			$this->load->view('people/login');
+			$this->load->view('people/people_footer');
 			$this->load->view('templates/footer');
 		}
 		
@@ -493,9 +449,95 @@
 			$sess_array = array('username' => ''); //remove session data
 			$this->session->unset_userdata('logged_in', $sess_array);
 			$data['message_display'] = 'Successfully logout';
+			$data_header['logged_in'] = false;
 			$this->load->view('templates/header');
+			$this->load->view('people/people_header', $data_header);
 			$this->load->view('people/login', $data);
+			$this->load->view('people/people_footer');
 			$this->load->view('templates/footer');
+		}
+//Notification
+		public function notification(){
+			$data['user_id'] = '4';
+			$result = $this->store_db->get_notification_list($data);
+			
+			$data_header['logged_in'] = true;
+			$this->load->view('templates/header');
+			$this->load->view('people/people_header', $data_header);
+			$this->load->view('people/sidebar');
+			$this->load->view('people/notification');
+			$this->load->view('people/people_footer');
+			$this->load->view('templates/footer');
+		}
+//Register		
+		public function register(){ //show registration page
+			$this->form_validation->set_rules('name', 'Nama Lengkap', 'trim|required|css_clean');
+			$this->form_validation->set_rules('mobile_phone', 'Nomor HP', 'trim|required|xss_clean');
+			$this->form_validation->set_rules('gender', 'Jenis Kelamin', 'trim|required|xss_clean');
+			$this->form_validation->set_rules('birthday', 'Tanggal Lahir', 'trim|required|xss_clean');
+			$this->form_validation->set_rules('email_value', 'Alamat Email', 'trim|required|xss_clean');
+			$this->form_validation->set_rules('password', 'Kata sandi', 'trim|required|xss_clean');
+		
+			$data = array(
+				'name' => $this->input->post('name'),
+				'mobile_phone' => $this->input->post('mobile_phone'),
+				'birthday' => $this->input->post('birthday'),
+				'email_value' => $this->input->post('email_value'),
+				'gender' => $this->input->post('gender'),
+				'password' => $this->input->post('password'),
+				'repassword' => $this->input->post('repassword'),
+				'register_tos' => $this->input->post('register_tos'),
+				'privilege' => '1',
+				'status' => '1'
+			);
+			$error = false;
+			if($this->input->post('password') !== $this->input->post('repassword')){
+				$data['pword_error'] = 'Kata sandi tidak sama';
+				$error = true;
+			}
+				
+			if($this->form_validation->run() == FALSE){
+				$error = true;		
+			}
+			
+			
+			if($error){
+				$data_header['logged_in'] = false;
+				$this->load->view('templates/header');
+				$this->load->view('people/people_header', $data_header);
+				$this->load->view('people/register', $data);			
+				$this->load->view('people/people_footer');			
+				$this->load->view('templates/footer');	
+			}
+			else  if ($this->input->post('register_tos') != '1'){
+				$data['message_display'] = 'Anda harus menyetujui Syarat dan Ketentuan dari JStore Online';
+				$data_header['logged_in'] = false;
+				$this->load->view('templates/header');
+				$this->load->view('people/people_header', $data_header);
+				$this->load->view('people/register', $data);			
+				$this->load->view('people/people_footer');			
+				$this->load->view('templates/footer');	
+			}
+			else {
+				$result = $this->store_db->reg_insert_user($data);
+				if($result == TRUE){
+					$sess_array = array(
+					'username' => $data['email_value']
+					);
+					
+					//registration success then automatically login by adding session
+					$this->session->set_userdata('logged_in', $sess_array);
+					redirect('people/home', 'refresh');
+				} else {
+					$data['message_display'] = 'Email sudah digunakan!';
+					$data_header['logged_in'] = false;
+					$this->load->view('templates/header');
+					$this->load->view('people/people_header', $data_header);
+					$this->load->view('people/register', $data);
+					$this->load->view('people/people_footer');
+					$this->load->view('templates/footer');
+				}
+			}
 		}
 	}
 ?>

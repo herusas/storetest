@@ -75,13 +75,17 @@
 					<div class="span3"><?php echo form_label('Tanggal Lahir (dd/mm/yyyy): ');?></div>
 					<div class="controls">					
 						<script>
+						  y = new Date().getFullYear();
+						  min = y-80;
+						  max = y-14;
 						  $(function() {
 							$( "#datepicker" ).datepicker({
+							  dateFormat: "dd/mm/yy",
 							  showOtherMonths: true,
 							  selectOtherMonths: true,
 							  changeMonth: true,
 							  changeYear: true,
-							  yearRange: "1940:2000"	  
+							  yearRange: min+":"+max	  
 							});
 						  });
 						</script>

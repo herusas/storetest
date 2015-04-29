@@ -1,11 +1,11 @@
 <div class="maincontent-admin">
 	<h1 class="mb-0 mb-30" style="word-break: break-all">
-		<i class="icon-avatar-alt mr-10"></i><?php //echo $name; ?>
+		<i class="icon-avatar-alt mr-10"></i><?php echo $name; ?>
 	</h1>
 	<ul class="horizontal-tab clear-b mt-20">
 		<li class=""><a href="edit">Biodata Diri</a></li>
-		<li class="active"><a href="address">Daftar Alamat</a></li>
-		<li class=""><a href="bank">Rekening Bank</a></li>
+		<li class=""><a href="address">Daftar Alamat</a></li>
+		<li class="active"><a href="bank">Rekening Bank</a></li>
 		<li class=""><a href="notification">Notifikasi</a></li>
 		<li class=""><a href="privacy">Atur Privasi</a></li>
 	</ul>

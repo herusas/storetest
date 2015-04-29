@@ -25,7 +25,7 @@
 			'birth_place' => '',
 			'photo_user' => '',
 			'photo_thumb' => '',
-			'gender' => '',
+			'gender' => $data['gender'],
 			'hobby' => '',
 			'last_modified_datetime' => date('Y-m-d H:i:s')
 			);
@@ -71,6 +71,20 @@
 			$this->db->select('user_id');
 			$this->db->from('user');
 			$this->db->where('username', $data['username']);
+			$this->db->limit(1);
+			$query = $this->db->get();
+
+			if ($query->num_rows() == 1) {
+				return $query->result(0);
+			} else {
+				return false;
+			}
+		}
+		
+		public function get_user_fullname($data){
+			$this->db->select('name');
+			$this->db->from('profile');
+			$this->db->where('user_id', $data['user_id']);
 			$this->db->limit(1);
 			$query = $this->db->get();
 
@@ -207,7 +221,20 @@
 			}
 
 			return $result;
+		}
+		
+		public function get_notification_list($data){
+			$cond = array('status' => '1');
+			$this->db->select('a.notification_id, a.name, a.description, (select b.status from user_notification_settings b where b.user_id = "'.$data['user_id'].'" and b.notification_id = a.notification_id) as status');
+			$this->db->from('notification a');
+			$this->db->where($cond);
+			$query = $this->db->get();
 			
+			if ($query->num_rows() >= 1) {
+				return $query->result(0);
+			} else {
+				return false;
+			}
 		}
 
 	}
